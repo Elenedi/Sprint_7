@@ -1,4 +1,4 @@
-package CreateOrderTesting;
+package CreateOrderTest;
 
 import io.qameta.allure.Step;
 import io.qameta.allure.internal.shadowed.jackson.databind.ObjectMapper;
