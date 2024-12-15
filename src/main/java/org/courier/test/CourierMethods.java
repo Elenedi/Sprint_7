@@ -11,6 +11,9 @@ import static org.hamcrest.core.IsNot.not;
     public class CourierMethods {
         private Gson gson;
 
+        public static final String CREATE_COURIER_PATH = "api/v1/courier";
+        public static final String LOGIN_COURIER_PATH = "api/v1/courier/login";
+
         public CourierMethods() {
             gson = new GsonBuilder().setPrettyPrinting().create();
         }
@@ -39,7 +42,7 @@ import static org.hamcrest.core.IsNot.not;
                     .header("Content-Type", "application/json")
                     .body(body)
                     .when()
-                    .post(Constants.BASE_URI + "/api/v1/courier");
+                    .post(Constants.BASE_URI + CREATE_COURIER_PATH);
         }
 
         // Метод для авторизации
@@ -57,7 +60,7 @@ import static org.hamcrest.core.IsNot.not;
                     .header("Content-Type", "application/json")
                     .body(createRequestBody(login, password, "")) // Используем новый метод
                     .when()
-                    .post(Constants.BASE_URI + "/api/v1/courier/login");
+                    .post(Constants.BASE_URI + LOGIN_COURIER_PATH);
 
             if (response.getStatusCode() == 200) {
                 return response.jsonPath().getInt("id");
@@ -72,7 +75,7 @@ import static org.hamcrest.core.IsNot.not;
             RestAssured.given()
                     .header("Content-Type", "application/json")
                     .when()
-                    .delete(Constants.BASE_URI + "/api/v1/courier/" + courierId)
+                    .delete(Constants.BASE_URI + CREATE_COURIER_PATH + courierId)
                     .then()
                     .statusCode(200); // Ожидаем успешное удаление курьера
         }

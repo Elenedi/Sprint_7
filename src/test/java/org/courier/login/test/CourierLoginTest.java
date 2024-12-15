@@ -23,8 +23,11 @@ import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.courier.test.CourierMethods.LOGIN_COURIER_PATH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.apache.http.HttpStatus.*;
 
 //Тесты без создания отдельного класса с методами
 @Epic("Courier Management")
@@ -56,7 +59,7 @@ public class CourierLoginTest {
         String body = courierMethods.createRequestBody(login, password, "clipa");
 
         Response createResponse = courierMethods.createCourier(body);
-        assertThat(createResponse.getStatusCode(), is(201));
+        assertThat(createResponse.getStatusCode(), is(SC_CREATED));
 
         String loginBody = courierMethods.createRequestBody(login, password, "");
 
@@ -64,9 +67,9 @@ public class CourierLoginTest {
                 .header("Content-Type", "application/json")
                 .body(loginBody)
                 .when()
-                .post(Constants.BASE_URI + "/api/v1/courier/login");
+                .post(Constants.BASE_URI + LOGIN_COURIER_PATH);
 
-        assertThat(loginResponse.getStatusCode(), is(200));
+        assertThat(loginResponse.getStatusCode(), is(SC_OK));
         assertThat(loginResponse.jsonPath().get("id"), is(notNullValue()));
 
         courierId = courierMethods.getCourierId(login, password);
@@ -74,65 +77,80 @@ public class CourierLoginTest {
     }
 
     @Test
-    @DisplayName("Login with wrong credentials should fail")
-    @Step("Test courier login with wrong credentials")
-    public void testWithWrongLoginOrPasswordCourier() {
+    @DisplayName("Login with wrong login")
+    @Step("Test courier login with wrong login")
+    public void testWithWrongLogin() {
         String body = courierMethods.createRequestBody("client", "1234", "clipa");
         Response createResponse = courierMethods.createCourier(body);
 
-        assertThat(createResponse.getStatusCode(), is(201));
+        assertThat(createResponse.getStatusCode(), is(SC_CREATED));
 
-        // Test wrong login
         String bodyWrongLogin = courierMethods.createRequestBody("wrong", "1234", "");
         Response responseWrongLogin = RestAssured.given()
                 .header("Content-Type", "application/json")
                 .body(bodyWrongLogin)
                 .when()
-                .post(Constants.BASE_URI + "/api/v1/courier/login");
+                .post(Constants.BASE_URI + LOGIN_COURIER_PATH);
 
-        assertThat(responseWrongLogin.getStatusCode(), is(404));
+        assertThat(responseWrongLogin.getStatusCode(), is(SC_NOT_FOUND));
         assertThat(responseWrongLogin.jsonPath().getString("message"), is("Учетная запись не найдена"));
+    }
 
-        // Test wrong password
+    @Test
+    @DisplayName("Login with wrong password")
+    @Step("Test courier login with wrong password")
+    public void testWithWrongPassword() {
+        String body = courierMethods.createRequestBody("client", "1234", "clipa");
+        Response createResponse = courierMethods.createCourier(body);
+
+        assertThat(createResponse.getStatusCode(), is(SC_CREATED));
+
         String bodyWrongPassword = courierMethods.createRequestBody("client", "wrong", "");
         Response responseWrongPassword = RestAssured.given()
                 .header("Content-Type", "application/json")
                 .body(bodyWrongPassword)
                 .when()
-                .post(Constants.BASE_URI + "/api/v1/courier/login");
+                .post(Constants.BASE_URI + LOGIN_COURIER_PATH);
 
-        assertThat(responseWrongPassword.getStatusCode(), is(404));
+        assertThat(responseWrongPassword.getStatusCode(), is(SC_NOT_FOUND));
         assertThat(responseWrongPassword.jsonPath().getString("message"), is("Учетная запись не найдена"));
     }
 
     @Test
-    @DisplayName("Missing required fields returns error")
-    @Step("Test missing login or password during courier login")
-    public void testMissingRequiredFieldsCourier() {
+    @DisplayName("Missing required fields returns error for missing login")
+    @Step("Test missing login during courier login")
+    public void testMissingLogin() {
         String body = courierMethods.createRequestBody("client", "1234", "clipa");
         Response createResponse = courierMethods.createCourier(body);
-        assertThat(createResponse.getStatusCode(), is(201));
+        assertThat(createResponse.getStatusCode(), is(SC_CREATED));
 
-        // Test missing login
         String bodyWithoutLogin = "{ \"password\": \"1234\" }";
         Response responseWithoutLogin = RestAssured.given()
                 .header("Content-Type", "application/json")
                 .body(bodyWithoutLogin)
                 .when()
-                .post(Constants.BASE_URI + "/api/v1/courier/login");
+                .post(Constants.BASE_URI + LOGIN_COURIER_PATH);
 
-        assertThat(responseWithoutLogin.getStatusCode(), is(400));
+        assertThat(responseWithoutLogin.getStatusCode(), is(SC_BAD_REQUEST));
         assertThat(responseWithoutLogin.jsonPath().getString("message"), is("Недостаточно данных для входа"));
+    }
 
-        // Test missing password
+    @Test
+    @DisplayName("Missing required fields returns error for missing password")
+    @Step("Test missing password during courier login")
+    public void testMissingPassword() {
+        String body = courierMethods.createRequestBody("client", "1234", "clipa");
+        Response createResponse = courierMethods.createCourier(body);
+        assertThat(createResponse.getStatusCode(), is(SC_CREATED));
+
         String bodyWithoutPassword = "{ \"login\": \"client\" }";
         Response responseWithoutPassword = RestAssured.given()
                 .header("Content-Type", "application/json")
                 .body(bodyWithoutPassword)
                 .when()
-                .post(Constants.BASE_URI + "/api/v1/courier/login");
+                .post(Constants.BASE_URI + LOGIN_COURIER_PATH);
 
-        assertThat(responseWithoutPassword.getStatusCode(), is(400));
+        assertThat(responseWithoutPassword.getStatusCode(), is(SC_BAD_REQUEST));
         assertThat(responseWithoutPassword.jsonPath().getString("message"), is("Недостаточно данных для входа"));
     }
 
@@ -145,9 +163,11 @@ public class CourierLoginTest {
                 .header("Content-Type", "application/json")
                 .body(bodyNonExistentUser)
                 .when()
-                .post(Constants.BASE_URI + "/api/v1/courier/login");
+                .post(Constants.BASE_URI + LOGIN_COURIER_PATH);
 
-        assertThat(response.getStatusCode(), is(404));
+        assertThat(response.getStatusCode(), is(SC_NOT_FOUND));
         assertThat(response.jsonPath().getString("message"), is("Учетная запись не найдена"));
     }
 }
+
+

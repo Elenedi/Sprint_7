@@ -10,20 +10,21 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.is;
+import static org.apache.http.HttpStatus.*;
 
 public class ClientOrder {
-    private static final String CREATE_ORDERS = "/api/v1/orders";
-    private static final String CANCEL_ORDER = "/api/v1/orders/finish";
-    private static final String GET_ORDER_BY_TRACK = "/api/v1/orders/track";
+    private static final String CREATE_ORDERS = "api/v1/orders";
+    private static final String CANCEL_ORDER = "api/v1/orders/finish";
+    private static final String GET_ORDER_BY_TRACK = "api/v1/orders/track";
 
     @Step("Creating an order")
     public static Response createNewOrder(OrderCreation orderCreation) {
         Response response = given()
                 .header("Content-type", "application/json")
                 .body(orderCreation)
-                .post(CREATE_ORDERS);
+                .post(Constants.BASE_URI + CREATE_ORDERS);
 
-        assertThat(String.valueOf(response.getStatusCode()), is(201));
+        assertThat(response.getStatusCode(), is(SC_CREATED));
         JsonPath jsonPath = new JsonPath(response.asString());
         Integer trackNumber = jsonPath.get("track");
         assertThat(trackNumber, is(not(0)));
@@ -35,9 +36,9 @@ public class ClientOrder {
         String trackNumber = response.jsonPath().getString("track");
         Response trackResponse = given()
                 .header("Content-type", "application/json")
-                .get(GET_ORDER_BY_TRACK + "?track=" + trackNumber);
+                .get(Constants.BASE_URI + GET_ORDER_BY_TRACK + "?track=" + trackNumber);
 
-        assertThat(String.valueOf(trackResponse.getStatusCode()), is(200));
+        assertThat(trackResponse.getStatusCode(), is(SC_OK));
         return trackResponse.jsonPath().getString("id");
     }
 
@@ -45,9 +46,9 @@ public class ClientOrder {
     public static Response deleteOrder(String id) {
         Response response = given()
                 .header("Content-type", "application/json")
-                .put(CANCEL_ORDER + "?id=" + id);
+                .put(Constants.BASE_URI + CANCEL_ORDER + "?id=" + id);
 
-        assertThat(String.valueOf(response.getStatusCode()), is(200));
+        assertThat(response.getStatusCode(), is(SC_OK));
         return response;
     }
 
@@ -55,13 +56,14 @@ public class ClientOrder {
     public static Response getAllOrders() {
         Response response = given()
                 .header("Content-type", "application/json")
-                .get(CREATE_ORDERS);
+                .get(Constants.BASE_URI + CREATE_ORDERS);
 
-        assertThat(String.valueOf(response.getStatusCode()), is(200));
+        assertThat(response.getStatusCode(), is(SC_OK));
         return response;
     }
 
     public static void comparingSuccessfulOrderSet(Response createResponse, int scCreated) {
+        assertThat(createResponse.getStatusCode(), is(scCreated));
     }
 }
 

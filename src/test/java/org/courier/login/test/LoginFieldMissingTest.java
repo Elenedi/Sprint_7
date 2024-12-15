@@ -12,6 +12,7 @@ import io.restassured.response.Response;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.courier.test.CourierMethods.LOGIN_COURIER_PATH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -46,7 +47,7 @@ public class LoginFieldMissingTest {
                 .header("Content-Type", "application/json")
                 .body("{\"password\": \"" + password + "\"}")
                 .when()
-                .post("/api/v1/courier/login");
+                .post(LOGIN_COURIER_PATH);
         assertThat(responseWithoutLogin.getStatusCode(), is(400));
         assertThat(responseWithoutLogin.jsonPath().getString("message"), is("Недостаточно данных для входа"));
 
@@ -55,7 +56,7 @@ public class LoginFieldMissingTest {
                 .header("Content-Type", "application/json")
                 .body("{\"login\": \"" + login + "\"}")
                 .when()
-                .post("/api/v1/courier/login");
+                .post(LOGIN_COURIER_PATH);
         assertThat(responseWithoutPassword.getStatusCode(), is(400));
         assertThat(responseWithoutPassword.jsonPath().getString("message"), is("Недостаточно данных для входа"));
     }
